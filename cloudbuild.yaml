@@ -1,0 +1,25 @@
+steps:
+
+  - name: 'gcr.io/k8s-skaffold/pack'
+    entrypoint: 'pack'
+    args:
+      [
+        'build',
+        '--builder=gcr.io/buildpacks/builder',
+        '--publish',
+        'gcr.io/choice-operator/auction-server',
+      ]
+  #deploy to Google Cloud Run
+  - name: 'gcr.io/cloud-builders/gcloud'
+    args:
+      [
+        'run',
+        'deploy',
+        'auction-server',
+        '--image',
+        'gcr.io/choice-operator/auction-server:latest',
+        '--region',
+        'europe-west6',
+        '--platform',
+        'managed',
+      ]

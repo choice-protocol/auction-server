@@ -13,40 +13,84 @@ cred = credentials.Certificate('key.json')
 default_app = initialize_app(cred)
 db = firestore.client()
 block_bidders_ref = db.collection('block_bidders')
+# app.py
 
+# Required imports
+import os
+from flask import Flask, request, jsonify
+from firebase_admin import credentials, firestore, initialize_app
 
-@app.route('/bid', methods=['POST'])
+# Initialize Flask app
+app = Flask(__name__)
+
+# Initialize Firestore DB
+cred = credentials.Certificate('key.json')
+default_app = initialize_app(cred)
+db = firestore.client()
+todo_ref = db.collection('todos')
+
+@app.route('/add', methods=['POST'])
 def create():
     """
-        TODO:
-        1) check the block has not been mined already (and thus the auction is closed)
-        2) check the signature is valid before the set, to avoid permision troulbe
-        One document per block per bidder
-        e.g. json={'block': '12375272', 'bid': '0.00001', 'relay_http_adress':'infura_smarter.io','bidder_address':'0xgqeqin2152342312de1w1', signature:'1x34qz q24tq32xtq34ztx34t34' }
+        create() : Add document to Firestore collection with request body.
+        Ensure you pass a custom ID as part of json body in post request,
+        e.g. json={'id': '1', 'title': 'Write a blog post'}
     """
     try:
-        id = str(hash( request.json['block']  +  request.json['bidder_address'] ) )+ request.json['block'] + '-' +  request.json['bidder_address']
-        # the hash is there to avoid hotspots 
-        block_ref.document(id).set(request.json)
+        id = request.json['id']
+        todo_ref.document(id).set(request.json)
         return jsonify({"success": True}), 200
     except Exception as e:
         return f"An Error Occured: {e}"
 
-@app.route('/winner', methods=['GET'])
+@app.route('/list', methods=['GET'])
 def read():
     """
-        read() : who won if the block is mined, no peeking otherwise (blind auctions)
+        read() : Fetches documents from Firestore collection as JSON.
+        todo : Return document that matches query ID.
+        all_todos : Return all documents.
     """
-    # Note: Use of CollectionRef stream() is prefered to get()
-    bids = db.collection(u'block_bidders').where(u'block', u'==', request.json['block'] ).stream()
-    seccond_price = 0
-    max_bid = {'bid':0}
-    for bid in bids:
-        if bid['bid'] >     max_bid['bid']:
-            seccond_price = max_bid['bid']
-            max_bid = bid
-    return (max_bid, seccond_price)
-    
+    try:
+        # Check if ID was passed to URL query
+        todo_id = request.args.get('id')
+        if todo_id:
+            todo = todo_ref.document(todo_id).get()
+            return jsonify(todo.to_dict()), 200
+        else:
+            all_todos = [doc.to_dict() for doc in todo_ref.stream()]
+            return jsonify(all_todos), 200
+    except Exception as e:
+        return f"An Error Occured: {e}"
+
+@app.route('/update', methods=['POST', 'PUT'])
+def update():
+    """
+        update() : Update document in Firestore collection with request body.
+        Ensure you pass a custom ID as part of json body in post request,
+        e.g. json={'id': '1', 'title': 'Write a blog post today'}
+    """
+    try:
+        id = request.json['id']
+        todo_ref.document(id).update(request.json)
+        return jsonify({"success": True}), 200
+    except Exception as e:
+        return f"An Error Occured: {e}"
+
+@app.route('/delete', methods=['GET', 'DELETE'])
+def delete():
+    """
+        delete() : Delete a document from Firestore collection.
+    """
+    try:
+        # Check for ID in URL query
+        todo_id = request.args.get('id')
+        todo_ref.document(todo_id).delete()
+        return jsonify({"success": True}), 200
+    except Exception as e:
+        return f"An Error Occured: {e}"
+
 port = int(os.environ.get('PORT', 8080))
 if __name__ == '__main__':
     app.run(threaded=True, host='0.0.0.0', port=port)
+    
+    

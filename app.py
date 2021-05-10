@@ -38,14 +38,13 @@ def read():
         read() : who won if the block is mined, no peeking otherwise (blind auctions)
     """
     # Note: Use of CollectionRef stream() is prefered to get()
-    bids = db.collection('block_bidders').where(u'block', u'==', True).stream()
-
+    bids = db.collection(u'block_bidders').where(u'block', u'==', request.json['block'] ).stream()
     seccond_price = 0
     max_bid = {'bid':0}
     for bid in bids:
         if bid['bid'] >     max_bid['bid']:
-        seccond_price = max_bid['bid']
-        max_bid = bid
+            seccond_price = max_bid['bid']
+            max_bid = bid
     return (max_bid, seccond_price)
     
 port = int(os.environ.get('PORT', 8080))

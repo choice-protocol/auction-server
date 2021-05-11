@@ -1,20 +1,4 @@
-# app.py
-
-# Required imports
-import os
-from flask import Flask, request, jsonify
-from firebase_admin import credentials, firestore, initialize_app
-
-# Initialize Flask app
-app = Flask(__name__)
-
-# Initialize Firestore DB
-cred = credentials.Certificate('key.json')
-default_app = initialize_app(cred)
-db = firestore.client()
-block_bidders_ref = db.collection('block_bidders')
-# app.py
-
+#
 # Required imports
 import os
 from flask import Flask, request, jsonify

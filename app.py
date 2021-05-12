@@ -8,12 +8,11 @@ from time import time
 app = Flask(__name__)
 
 # Initialize Firestore DB
-cred = credentials.Certificate('key.json')
-default_app = initialize_app(cred)
+default_app = initialize_app()
 db = firestore.client()
 
 bids_ref = db.collection('bids')
-bids_ref = db.collection('txs')
+txs_ref = db.collection('txs')
 
 @app.route('/bid', methods=['POST'])
 def bid():
@@ -21,7 +20,7 @@ def bid():
         bid() : Add bid to Firestore collection with request body.
     """
     try:
-        id = hash(request.json['bundle'] + request.json['bidder'])
+        id = hash(request.json['bundle'])
         bids_ref.document(id).set(request.json)
         return jsonify({"success": True}), 200
     except Exception as e:

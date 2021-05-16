@@ -1,3 +1,11 @@
 flask
 firebase
 firebase_admin
+dataclasses
+pprint import pprint
+typing 
+
+rlp
+eth_typing import HexStr
+eth_utils
+web3

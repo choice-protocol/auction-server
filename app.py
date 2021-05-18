@@ -74,9 +74,9 @@ def decode_raw_tx(raw_tx: str):
     chain_id = (tx.v - 35) // 2 if tx.v % 2 else (tx.v - 36) // 2
     return DecodedTx(hash_tx, from_, to, tx.nonce, tx.gas, tx.gas_price, tx.value, data, chain_id, r, s, tx.v)
 
-raw_tx = "0xf8a910850684ee180082e48694a0b86991c6218b36c1d19d4a2e9eb0ce3606eb4880b844a9059cbb000000000000000000000000b8b59a7bc828e6074a4dd00fa422ee6b92703f9200000000000000000000000000000000000000000000000000000000010366401ba0e2a4093875682ac6a1da94cdcc0a783fe61a7273d98e1ebfe77ace9cab91a120a00f553e48f3496b7329a7c0008b3531dd29490c517ad28b0e6c1fba03b79a1dee"  # noqa
-res = decode_raw_tx(raw_tx)
-    
+raw_tx = "0xf8a910850684ee180082e48694a0b86991c6218b36c1d19d4a2e9eb0ce3606eb4880b844a9059cbb000000000000000000000000b8b59a7bc828e6074a4dd00fa422ee6b92703f9200000000000000000000000000000000000000000000000000000000010366401ba0e2a4093875682ac6a1da94cdcc0a783fe61a7273d98e1ebfe77ace9cab91a120a00f553e48f3496b7329a7c0008b3531dd29490c517ad28b0e6c1fba03b79a1dee" 
+
+
 
 
 
@@ -96,11 +96,15 @@ txs_ref = db.collection('txs')
 @app.route('/bid', methods=['POST'])
 def bid():
     """
-        bid() : Add bid to Firestore collection with request body.
+        bid() : Add bid to Firestore with bids extracted from their bodies
     """
     try:
         id = hash(request.json['bundle'])
+        # the users transaction in the request bundle needs to be checked for the bid value that and added to the saved json
         bids_ref.document(id).set(request.json)
+        
+        bid_value
+        
         return jsonify({"success": True}), 200
     except Exception as e:
         return f"An Error Occured: {e}"
@@ -110,14 +114,10 @@ def close():
     """
         dispatch any auction beyond their closing time that havent been dispatched yet (so hit this often).
     """
-    for tx in db.collection(u'txs').where(u'timestamp', u'<', time() -30 ).where(u'Auction',u'==',u'open').stream():
+    for tx in db.collection(u'txs').where(u'timestamp', u'<', time() -6 ).where(u'Auction',u'==',u'open').stream():
         highest_bid,highest_bundle = 0,[]
-        for bids in db.collection(u'bids').where(u'tx',u'==',tx.tx ).stream():
-               #calculate the value for the user of the bid
-                bid_value = 0
-                if bid_value > highest_bid:
-                    highest_bid,highest_bundle=bid_value,bundle
-        # Udpdate auction for the tx to closed:
+        # dispatch to flashbots the winning bundle with user signature back in
+        # 
         tx.update({"Auction": "closed", "Winner_Bundle": highest_bundle, Winner_bid:highest_bid})
  
 @app.route('/list', methods=['GET'])

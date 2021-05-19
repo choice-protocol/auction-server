@@ -116,6 +116,7 @@ def close():
     """
     for tx in db.collection(u'txs').where(u'timestamp', u'<', time() -6 ).where(u'Auction',u'==',u'open').stream():
         highest_bid,highest_bundle = 0,[]
+        # go over all bundles, extract the bid of each one from the payment using the proxy contract
         # dispatch to flashbots the winning bundle with user signature back in
         # 
         tx.update({"Auction": "closed", "Winner_Bundle": highest_bundle, Winner_bid:highest_bid})
